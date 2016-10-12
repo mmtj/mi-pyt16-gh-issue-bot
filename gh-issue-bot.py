@@ -6,6 +6,7 @@ import click
 
 import json
 import time
+import re
 
 class IssueBot:
    
@@ -43,15 +44,56 @@ class IssueBot:
         else:
             self.wait = int(sleep)
 
+        # ugly, but at least it works
+        with open(rulescfg, 'r') as rulef:
+            self.rules = {}
+            for line in rulef:
+                sp = line.split(':')
+                issue_type = sp[0]
+                replace = sp[1].split('->')
+                replace[0] = re.compile(replace[0])
+                replace[1] = replace[1].rstrip()
+
+                self.rules[issue_type] = replace
+
     def get_issues (self, req):
         print("Trying request: ", req)
         r = self.session.get(req)
 
-        print("JSON response: ", json.dumps(r.json(), sort_keys=True, indent=4)) # pretty print
+        #print("JSON response: ", json.dumps(r.json(), sort_keys=True, indent=4)) # pretty print
         print("Response status code: ", r.status_code)
 
         return r.json()
-   
+  
+    def apply_rules (self, title):
+        data = []
+        
+        for iss_type, replace in self.rules.items():
+            if replace[0].match(title):
+                data.append(replace[1])
+                return data
+
+        return None
+
+    def label_issue (self, json_data):
+        number = json_data['number']
+        url = "https://api.github.com/repos/%s/issues/%s/labels" % (self.repo, number)
+
+        if not json_data['labels']:
+            title = json_data['title']
+            
+            payload = self.apply_rules(title)
+            if not payload:
+                payload = [self.rules['default'][1]]
+            
+            print("Trying request: ", url)
+            r = self.session.post(url, json=payload)
+            print("Response status code: ", r.status_code)
+
+    def process_issues (self, json_data):
+        for row in json_data:
+            data = self.label_issue(row)
+
     def start (self, repo, sleep, auth, config, rules):
         try:
             # prepare session
@@ -61,6 +103,8 @@ class IssueBot:
             
             while (1):
                 reply = self.get_issues(req_url)
+                self.process_issues(reply)
+
                 print("Next check in %d seconds" % self.wait)
                 time.sleep(self.wait)
 
@@ -75,7 +119,7 @@ class IssueBot:
 @click.option('--sleep', help='Number of second before another check')
 @click.option('--auth', default='auth.cfg', help='File with github credentials')
 @click.option('--config', default='settings.cfg', help='Main config file')
-@click.option('--rules', default='rules.cfg', help='Rules definition file')
+@click.option('--rules', default='rules', help='Rules definition file')
 def run (repo, sleep, auth, config, rules):
         
     robot = IssueBot()
