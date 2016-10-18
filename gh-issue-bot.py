@@ -9,7 +9,8 @@ import time
 import re
 
 class IssueBot:
-   
+    DEFAULT_WAIT = 60
+
     def __init__ (self):
         self.session = None
         self.repo = None
@@ -40,21 +41,16 @@ class IssueBot:
             if 'sleep' in config['general']:
                 self.wait = int(config['general']['sleep'])
             else:
-                self.wait = 60 # Default value if not set either in config or at runtime
+                self.wait = DEFAULT_WAIT # Default value if not set either in config or at runtime
         else:
             self.wait = int(sleep)
 
-        # ugly, but at least it works
-        with open(rulescfg, 'r') as rulef:
-            self.rules = {}
-            for line in rulef:
-                sp = line.split(':')
-                issue_type = sp[0]
-                replace = sp[1].split('->')
-                replace[0] = re.compile(replace[0])
-                replace[1] = replace[1].rstrip()
+        rules_conf = configparser.ConfigParser()
+        rules_conf.read(rulescfg)
 
-                self.rules[issue_type] = replace
+        self.rr = {} # rewrite rules
+        for key, value in rules_conf['labels'].items():
+            self.rr[key] = re.compile(value)
 
     def get_issues (self, req):
         print("Trying request: ", req)
@@ -66,13 +62,10 @@ class IssueBot:
         return r.json()
   
     def apply_rules (self, title):
-        data = []
-        
-        for iss_type, replace in self.rules.items():
-            if replace[0].match(title):
-                data.append(replace[1])
-                return data
-
+        for label, regex in self.rr.items():
+            if regex.search(title):
+                return [label]
+            
         return None
 
     def label_issue (self, json_data):
@@ -84,7 +77,7 @@ class IssueBot:
             
             payload = self.apply_rules(title)
             if not payload:
-                payload = [self.rules['default'][1]]
+                payload = [self.rules_conf['default']['label']]
             
             print("Trying request: ", url)
             r = self.session.post(url, json=payload)

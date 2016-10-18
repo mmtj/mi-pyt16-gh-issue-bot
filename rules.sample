@@ -1,3 +1,6 @@
-bug:bug|BUG->bug
-feature:feature|FEATURE->enhancement
-default:->unconfirmed
+[labels]
+bug=bug|BUG
+enhancement=feature|FEATURE
+
+[default]
+label=unconfirmed
