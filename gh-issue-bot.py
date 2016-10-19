@@ -12,6 +12,8 @@ import re
 
 class IssueBot:
     DEFAULT_WAIT = 60
+    DEFAULT_AUTH = 'auth.cfg'
+    DEFAULT_RULES = 'rules'
 
     def __init__ (self):
         self.session = None
@@ -19,15 +21,22 @@ class IssueBot:
         self.token = None
         self.wait = None
 
-    def init (self, repo, sleep, auth, main, rules):
-        self.init_config_vals(repo, sleep, auth, main, rules)
+        self.authcfg = self.DEFAULT_AUTH
+        self.rulescfg = self.DEFAULT_RULES
+
+    def init_basic (self, authcfg, rulescfg):
+        self.authcfg = authcfg
+        self.rulescfg = rulescfg
+
+    def init (self, repo, sleep, main):
+        self.init_config_vals(repo, sleep, main)
         
         self.session = requests.Session()
         self.session.headers = {'Authorization': 'token ' + self.token, 'User-Agent': 'Python'}
         
-    def init_config_vals (self, repo, sleep, authcfg, maincfg, rulescfg):
+    def init_config_vals (self, repo, sleep, maincfg):
         auth = configparser.ConfigParser()
-        auth.read(authcfg)
+        auth.read(self.authcfg)
 
         if not repo:
             self.repo = auth['github']['repo']
@@ -43,12 +52,12 @@ class IssueBot:
             if 'sleep' in config['general']:
                 self.wait = int(config['general']['sleep'])
             else:
-                self.wait = DEFAULT_WAIT # Default value if not set either in config or at runtime
+                self.wait = self.DEFAULT_WAIT # Default value if not set either in config or at runtime
         else:
             self.wait = int(sleep)
 
         rules_conf = configparser.ConfigParser()
-        rules_conf.read(rulescfg)
+        rules_conf.read(self.rulescfg)
 
         self.rr = {} # rewrite rules
         for key, value in rules_conf['labels'].items():
@@ -89,10 +98,10 @@ class IssueBot:
         for row in json_data:
             data = self.label_issue(row)
 
-    def start (self, repo, sleep, auth, config, rules):
+    def start (self, repo, sleep, config):
         try:
             # prepare session
-            self.init(repo, sleep, auth, config, rules) 
+            self.init(repo, sleep, config) 
 
             req_url = "https://api.github.com/repos/%s/issues" % self.repo
             
@@ -114,6 +123,7 @@ class IssueBot:
 
 # Flask webapp part
 webapp = Flask(__name__)
+robot = IssueBot()
  
 @webapp.route('/')
 def index():
@@ -131,8 +141,12 @@ def cli():
     pass
 
 @cli.command()
-def web():
+@click.option('--auth', default='auth.cfg', help='File with github credentials')
+@click.option('--rules', default='rules', help='Rules definition file')
+def web(auth, rules):
     """Run bot as web app"""
+    robot.init_basic(auth, rules)
+    
     webapp.run(debug=True)
 
 @cli.command()
@@ -144,7 +158,8 @@ def web():
 def console (repo, sleep, auth, config, rules):
     """Run bot localy from command line """
     robot = IssueBot()
-    robot.start(repo, sleep, auth, config, rules)
+    robot.init_basic(auth, rules)
+    robot.start(repo, sleep, config)
 
 if __name__ == '__main__':
     cli()
