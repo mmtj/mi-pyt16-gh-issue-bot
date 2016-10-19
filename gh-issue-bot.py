@@ -107,16 +107,24 @@ class IssueBot:
         finally:
             self.session.close()
 
-@click.command()
+@click.group()
+def cli():
+    pass
+
+@cli.command()
+def web():
+    """Run the web app"""
+    click.echo('Running web app')
+
+@cli.command()
 @click.option('--repo', help='GitHub repository to check (format username/reponame)')
 @click.option('--sleep', help='Number of second before another check')
 @click.option('--auth', default='auth.cfg', help='File with github credentials')
 @click.option('--config', default='settings.cfg', help='Main config file')
 @click.option('--rules', default='rules', help='Rules definition file')
-def run (repo, sleep, auth, config, rules):
-        
+def console (repo, sleep, auth, config, rules):
     robot = IssueBot()
     robot.start(repo, sleep, auth, config, rules)
 
 if __name__ == '__main__':
-    run()
+    cli()
