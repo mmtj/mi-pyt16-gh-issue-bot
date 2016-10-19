@@ -27,13 +27,22 @@ class IssueBot:
     def init_basic (self, authcfg, rulescfg):
         self.authcfg = authcfg
         self.rulescfg = rulescfg
+    
+    def open_session (self):
+        self.session = requests.Session()
+        self.session.headers = {'Authorization': 'token ' + self.token, 'User-Agent': 'Python'}
+
+    def init_token (self): 
+        auth = configparser.ConfigParser()
+        auth.read(self.authcfg)
+        
+        self.token = auth['github']['token']
 
     def init (self, repo, sleep, main):
         self.init_config_vals(repo, sleep, main)
-        
-        self.session = requests.Session()
-        self.session.headers = {'Authorization': 'token ' + self.token, 'User-Agent': 'Python'}
-        
+        self.init_token()
+        self.open_session()
+   
     def init_config_vals (self, repo, sleep, maincfg):
         auth = configparser.ConfigParser()
         auth.read(self.authcfg)
@@ -42,8 +51,6 @@ class IssueBot:
             self.repo = auth['github']['repo']
         else:
             self.repo = repo
-
-        self.token = auth['github']['token']
 
         config = configparser.ConfigParser()
         config.read(maincfg)
@@ -55,7 +62,11 @@ class IssueBot:
                 self.wait = self.DEFAULT_WAIT # Default value if not set either in config or at runtime
         else:
             self.wait = int(sleep)
+    
+    def set_repo (self, repo):
+        self.repo = repo
 
+    def init_rules (self):
         rules_conf = configparser.ConfigParser()
         rules_conf.read(self.rulescfg)
 
@@ -118,9 +129,6 @@ class IssueBot:
         finally:
             self.session.close()
             
-    def one_pass_check ():
-        pass
-
 # Flask webapp part
 webapp = Flask(__name__)
 robot = IssueBot()
@@ -134,6 +142,15 @@ def hook ():
     data = request.get_json()
     print("Json_data recieved: ", data)
 
+    repo = data['repository']['full_name']
+    
+    robot.set_repo(repo)
+    robot.init_token()
+    robot.open_session()
+    robot.init_rules()
+    robot.label_issue(data['issue'])
+    robot.close_session()
+    
     return ''
 
 @click.group()
