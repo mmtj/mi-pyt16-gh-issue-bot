@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 
+from flask import Flask, request, render_template
+
 import requests
 import configparser
 import click
@@ -106,6 +108,23 @@ class IssueBot:
 
         finally:
             self.session.close()
+            
+    def one_pass_check ():
+        pass
+
+# Flask webapp part
+webapp = Flask(__name__)
+ 
+@webapp.route('/')
+def index():
+    return render_template('index.html', title='Yet Another GitHub Issue Bot', description='github issue bot')
+
+@webapp.route('/hook', methods=['POST'])
+def hook ():
+    data = request.get_json()
+    print("Json_data recieved: ", data)
+
+    return ''
 
 @click.group()
 def cli():
@@ -113,8 +132,8 @@ def cli():
 
 @cli.command()
 def web():
-    """Run the web app"""
-    click.echo('Running web app')
+    """Run bot as web app"""
+    webapp.run(debug=True)
 
 @cli.command()
 @click.option('--repo', help='GitHub repository to check (format username/reponame)')
@@ -123,6 +142,7 @@ def web():
 @click.option('--config', default='settings.cfg', help='Main config file')
 @click.option('--rules', default='rules', help='Rules definition file')
 def console (repo, sleep, auth, config, rules):
+    """Run bot localy from command line """
     robot = IssueBot()
     robot.start(repo, sleep, auth, config, rules)
 
