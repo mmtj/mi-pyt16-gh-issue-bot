@@ -1,17 +1,12 @@
-#! /usr/bin/env python3
-
-from flask import Flask, request, render_template
-
 import requests
 import configparser
-import click
-
 import json
 import time
 import re
 
 class IssueBot:
     DEFAULT_WAIT = 60
+    # default config files names
     DEFAULT_AUTH = 'auth.cfg'
     DEFAULT_RULES = 'rules'
 
@@ -23,6 +18,7 @@ class IssueBot:
 
         self.authcfg = self.DEFAULT_AUTH
         self.rulescfg = self.DEFAULT_RULES
+        self.rules_conf = None #dict with rules
 
     def init_basic (self, authcfg, rulescfg):
         self.authcfg = authcfg
@@ -41,6 +37,7 @@ class IssueBot:
     def init (self, repo, sleep, main):
         self.init_config_vals(repo, sleep, main)
         self.init_token()
+        self.init_rules()
         self.open_session()
    
     def init_config_vals (self, repo, sleep, maincfg):
@@ -67,11 +64,11 @@ class IssueBot:
         self.repo = repo
 
     def init_rules (self):
-        rules_conf = configparser.ConfigParser()
-        rules_conf.read(self.rulescfg)
+        self.rules_conf = configparser.ConfigParser()
+        self.rules_conf.read(self.rulescfg)
 
         self.rr = {} # rewrite rules
-        for key, value in rules_conf['labels'].items():
+        for key, value in self.rules_conf['labels'].items():
             self.rr[key] = re.compile(value)
 
     def get_issues (self, req):
@@ -127,56 +124,7 @@ class IssueBot:
             print('\n\nKeyboard exception received. Exiting.')
 
         finally:
-            self.session.close()
-            
-# Flask webapp part
-webapp = Flask(__name__)
-robot = IssueBot()
- 
-@webapp.route('/')
-def index():
-    return render_template('index.html', title='Yet Another GitHub Issue Bot', description='github issue bot')
+            self.close_session()
 
-@webapp.route('/hook', methods=['POST'])
-def hook ():
-    data = request.get_json()
-    print("Json_data recieved: ", data)
-
-    repo = data['repository']['full_name']
-    
-    robot.set_repo(repo)
-    robot.init_token()
-    robot.open_session()
-    robot.init_rules()
-    robot.label_issue(data['issue'])
-    robot.close_session()
-    
-    return ''
-
-@click.group()
-def cli():
-    pass
-
-@cli.command()
-@click.option('--auth', default='auth.cfg', help='File with github credentials')
-@click.option('--rules', default='rules', help='Rules definition file')
-def web(auth, rules):
-    """Run bot as web app"""
-    robot.init_basic(auth, rules)
-    
-    webapp.run(debug=True)
-
-@cli.command()
-@click.option('--repo', help='GitHub repository to check (format username/reponame)')
-@click.option('--sleep', help='Number of second before another check')
-@click.option('--auth', default='auth.cfg', help='File with github credentials')
-@click.option('--config', default='settings.cfg', help='Main config file')
-@click.option('--rules', default='rules', help='Rules definition file')
-def console (repo, sleep, auth, config, rules):
-    """Run bot localy from command line """
-    robot = IssueBot()
-    robot.init_basic(auth, rules)
-    robot.start(repo, sleep, config)
-
-if __name__ == '__main__':
-    cli()
+    def close_session (self):
+        self.session.close()
