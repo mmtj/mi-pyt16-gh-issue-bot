@@ -1,4 +1,4 @@
-# mi-pyt16-github-issue-bot
+# matejekm-github-issue-bot
 Yet Another GitHub Issue Bot.
 
 Disclaimer: Use at own risk as it could drink all your milk, ride your motorcycle or make your computer explode :-)
