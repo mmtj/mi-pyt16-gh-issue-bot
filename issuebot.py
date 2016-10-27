@@ -80,9 +80,9 @@ class IssueBot:
 
         return r.json()
   
-    def apply_rules (self, title):
+    def apply_rules (self, title, body):
         for label, regex in self.rr.items():
-            if regex.search(title):
+            if regex.search(title) or regex.search(body):
                 return [label]
             
         return None
@@ -93,8 +93,9 @@ class IssueBot:
 
         if not json_data['labels']:
             title = json_data['title']
+            body = json_data['body']
             
-            payload = self.apply_rules(title)
+            payload = self.apply_rules(title, body)
             if not payload:
                 payload = [self.rules_conf['default']['label']]
             
