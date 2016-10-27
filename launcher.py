@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import click
+import configparser
 from issuebot import IssueBot
 from flaskapp import webapp
 
@@ -15,7 +16,15 @@ def web(auth, rules):
     """Run bot as web app"""
     #robot.init_basic(auth, rules)
     
-    webapp.run(debug=True)
+    global_config = configparser.ConfigParser()
+    global_config.read('settings.cfg')
+    
+    # this does not work...
+    #webapp.run(debug=global_config['general']['debug'])
+    if global_config['general']['debug'] == 'True':
+        webapp.run(debug=True)
+    else:
+        webapp.run()
 
 @cli.command()
 @click.option('--repo', help='GitHub repository to check (format username/reponame)')

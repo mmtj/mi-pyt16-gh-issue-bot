@@ -9,29 +9,6 @@
 </head>
 
 <body>
-
-<h2>Hello coders!</h2>
-<div id="content">
-  <p>This is simple GitHub issue bot which goal is to label unlabeled issues based on regular expression-based rules.</p>
-
-  <h3>How do I use it?</h3>
-  <p>Just add webhook to URL below and bot will take care of the rest.</p>
-  <div class="code">
-  <code>{{ hook_url }}/hook</code>
-  </div>
-
-  <h3>Current rules</h3>
-  <p>So far bot use these regular expressions:</p>
-  <div class="code">
-  <pre>
-  <code>
-bug|BUG -&gt; bug
-feature|FEATURE -&gt; enhancement</code>
-  </pre>
-  </div>
-  <p>Defaulting to label <code>unconfirmed</code> when no rules apply.</p>
-
-</div>
-
+  {{ md_content | markdown }}
 </body>
 </html>

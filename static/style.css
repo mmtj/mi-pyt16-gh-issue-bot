@@ -1,2 +1,2 @@
-code { font-size: larger; background: #F4F7F8; }
-div.code { position: relative; left: 2.5em; background: #F4F7F8; width: 15em; }
+code { font-size: larger; }
+pre { position: relative; left: 2.5em; }
