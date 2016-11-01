@@ -1,0 +1,9 @@
+include README.md
+include LICENCE.md
+include INSTALL
+include matejekm_gh_issue_bot/static/style.css
+include matejekm_gh_issue_bot/templates/index.html
+include matejekm_gh_issue_bot/auth.cfg.sample
+include matejekm_gh_issue_bot/flask.cfg.sample
+include matejekm_gh_issue_bot/settings.cfg.sample
+include matejekm_gh_issue_bot/rules.sample

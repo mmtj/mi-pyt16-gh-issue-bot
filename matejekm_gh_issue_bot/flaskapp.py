@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template
-from issuebot import IssueBot
 from configparser import ConfigParser
+
+from .issuebot import IssueBot
 
 import jinja2
 from markdown import markdown

@@ -2,8 +2,9 @@
 
 import click
 import configparser
-from issuebot import IssueBot
-from flaskapp import webapp
+
+from .issuebot import IssueBot
+from .flaskapp import webapp
 
 @click.group()
 def cli():
