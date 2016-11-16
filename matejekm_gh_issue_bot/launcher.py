@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import os
 import click
 import configparser
 
@@ -17,8 +18,11 @@ def web(auth, rules):
     """Run bot as web app"""
     #robot.init_basic(auth, rules)
     
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    config_base_path = base_path + '/config'
+
     global_config = configparser.ConfigParser()
-    global_config.read('settings.cfg')
+    global_config.read(config_base_path + '/settings.cfg')
     
     # this does not work...
     #webapp.run(debug=global_config['general']['debug'])

@@ -3,6 +3,7 @@ from configparser import ConfigParser
 
 from .issuebot import IssueBot
 
+import os
 import jinja2
 from markdown import markdown
 import textwrap
@@ -10,15 +11,18 @@ import textwrap
 webapp = Flask(__name__)
 robot = IssueBot()
 
+base_path = os.path.dirname(os.path.abspath(__file__))
+config_base_path = base_path + '/config'
+
 config = ConfigParser()
-config.read('flask.cfg')
+config.read(config_base_path + '/flask.cfg')
 
 global_config = ConfigParser()
-global_config.read('settings.cfg')
+global_config.read(config_base_path + '/settings.cfg')
 
 md_content = None
 
-with open('README.md', 'r') as readme:
+with open(base_path + '/content/about.md', 'r') as readme:
     md_content = readme.read()
 
 @webapp.route('/')
