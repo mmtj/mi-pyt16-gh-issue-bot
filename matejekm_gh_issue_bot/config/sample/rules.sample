@@ -1,0 +1,6 @@
+[labels]
+bug=bug|BUG
+enhancement=feature|FEATURE
+
+[default]
+label=unconfirmed

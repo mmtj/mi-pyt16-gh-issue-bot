@@ -47,14 +47,14 @@ Create your own config files based on sample config files
 
 ### rules
 
-	[labels]
-	bug=bug|BUG
-	enhancement=feature|FEATURE
+    [labels]
+    bug=bug|BUG
+    enhancement=feature|FEATURE
 
-	[default]
-	label=unconfirmed
+    [default]
+    label=unconfirmed
 
 ### flask.cfg
 
-	[hook]
-	base_url=sample.domain
+    [hook]
+    base_url=sample.domain

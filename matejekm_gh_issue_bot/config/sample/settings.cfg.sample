@@ -1,0 +1,3 @@
+[general]
+sleep = 30
+debug = False
